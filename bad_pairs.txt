@@ -1,0 +1,13 @@
+# LuckNooz bad-pairs list.
+# Pairs where the FIRST word is really a noun, not the verb it was split on.
+# Format: one surface pair per line, "<misread-noun> <real-verb>".
+# When find_split picks the first word and the next word is the real verb,
+# it skips the first and splits at the second instead. Grows over time.
+# Lines after # are comments.
+
+report shows
+delays disrupts
+strikes kill
+courts convicts
+court convicts
+delay disrupts

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unknowable News Service — UNS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1714;
+    --paper:#f4efe6;
+    --paper-deep:#ece4d6;
+    --sienna:#9c4422;
+    --sienna-bright:#c25a2e;
+    --rule:#d8cdbb;
+    --muted:#7d7264;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Spectral',Georgia,serif;
+    line-height:1.5;
+    min-height:100vh;
+    padding:clamp(1.5rem,5vw,4rem) clamp(1rem,5vw,2rem);
+  }
+  .wrap{max-width:760px;margin:0 auto}
+
+  /* Masthead */
+  .masthead{
+    text-align:center;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:1.1rem;
+    margin-bottom:.5rem;
+  }
+  .eyebrow{
+    font-family:'Spectral';
+    font-style:italic;
+    color:var(--sienna);
+    letter-spacing:.02em;
+    font-size:clamp(.85rem,2.5vw,1rem);
+    margin-bottom:.4rem;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:900;
+    font-optical-sizing:144;
+    letter-spacing:-.02em;
+    line-height:.9;
+    font-size:clamp(3rem,13vw,6.5rem);
+    color:var(--ink);
+  }
+  h1 .nooz{color:var(--sienna)}
+  .uns-line{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    letter-spacing:.04em;
+    font-size:clamp(1rem,3.2vw,1.4rem);
+    margin-top:.35rem;
+    color:var(--ink);
+  }
+  .uns-line .uns{color:var(--sienna);letter-spacing:.12em}
+  .dek{
+    font-style:italic;
+    color:var(--muted);
+    font-size:clamp(.95rem,2.8vw,1.15rem);
+    margin-top:.7rem;
+  }
+  .folio{
+    display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:1px solid var(--rule);
+    padding:.5rem 0 .6rem;
+    margin-bottom:2rem;
+    font-size:.8rem;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.08em;
+  }
+
+  /* Headlines */
+  ol{list-style:none;counter-reset:nooz}
+  li{
+    counter-increment:nooz;
+    display:grid;
+    grid-template-columns:2.4rem 1fr;
+    gap:1rem;
+    padding:1.15rem 0;
+    border-bottom:1px solid var(--rule);
+    opacity:0;
+    transform:translateY(8px);
+    animation:rise .5s ease forwards;
+  }
+  li::before{
+    content:counter(nooz,decimal-leading-zero);
+    font-family:'Spectral';
+    font-size:.8rem;
+    color:var(--sienna);
+    padding-top:.55rem;
+    letter-spacing:.05em;
+  }
+  .line{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(1.25rem,4.5vw,1.7rem);
+    line-height:1.18;
+    letter-spacing:-.01em;
+  }
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* Footer */
+  footer{
+    margin-top:2.5rem;
+    text-align:center;
+    font-size:.82rem;
+    color:var(--muted);
+    line-height:1.7;
+  }
+  footer a{color:var(--sienna);text-decoration:none;border-bottom:1px solid var(--rule)}
+  footer a:hover{border-color:var(--sienna)}
+  .stamp{font-style:italic}
+
+  .state{
+    text-align:center;padding:3rem 1rem;color:var(--muted);font-style:italic;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    li{animation:none;opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <div class="eyebrow">even this headline is imbued with chance</div>
+      <h1>Un<span class="nooz">knowable</span></h1>
+      <p class="uns-line">News Service · <span class="uns">UNS</span></p>
+      <p class="dek">Real headlines, deconstructed and reconstituted by chance.</p>
+    </header>
+
+    <div class="folio">
+      <span id="folio-date">&nbsp;</span>
+      <span id="folio-count">&nbsp;</span>
+    </div>
+
+    <ol id="headlines" aria-live="polite">
+      <li class="state" style="grid-template-columns:1fr">Gathering the day's chance…</li>
+    </ol>
+
+    <footer>
+      <p class="stamp" id="stamp">&nbsp;</p>
+      <p>A foundling of <a href="https://luckism.org">Luckism</a>. Descended from the NewZoid Times.</p>
+    </footer>
+  </div>
+
+<script>
+(async function(){
+  const list = document.getElementById('headlines');
+  const folioDate = document.getElementById('folio-date');
+  const folioCount = document.getElementById('folio-count');
+  const stamp = document.getElementById('stamp');
+
+  function fmtDate(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    }catch(e){ return ''; }
+  }
+
+  try{
+    // cache-bust so a fresh scheduled build shows immediately
+    const res = await fetch('lucknooz.json?t=' + Date.now());
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    const heds = data.headlines || [];
+    folioDate.textContent = fmtDate(data.generated_at);
+    folioCount.textContent = heds.length + ' headlines';
+    stamp.textContent = 'Reconstituted ' + fmtDate(data.generated_at) +
+      ' from ' + (data.source_count || 0) + ' source headlines.';
+
+    if(!heds.length){
+      list.innerHTML = '<li class="state" style="grid-template-columns:1fr">No headlines in this edition. The next build will refresh them.</li>';
+      return;
+    }
+
+    list.innerHTML = '';
+    heds.forEach((h,i)=>{
+      const li = document.createElement('li');
+      li.style.animationDelay = (i*55) + 'ms';
+      const span = document.createElement('span');
+      span.className = 'line';
+      span.textContent = h;
+      li.appendChild(span);
+      list.appendChild(li);
+    });
+  }catch(err){
+    list.innerHTML = '<li class="state" style="grid-template-columns:1fr">' +
+      'Couldn\u2019t load this edition. The generator writes <code>lucknooz.json</code> on a schedule — ' +
+      'check that the latest build published it.</li>';
+    folioDate.textContent = '';
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>
