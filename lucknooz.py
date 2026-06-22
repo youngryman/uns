@@ -232,6 +232,61 @@ def _preserve_caps(original, replacement):
     return replacement
 
 
+# ---------------------------------------------------------------------------
+# Defamation screen — reject a finished cross when a serious-accusation verb
+# lands on a subject that looks like a real, named person. Keeps the verbs
+# available for harmless/absurd crosses (nations, abstractions); screens only
+# the case that manufactures a false accusation against an identifiable person.
+# Conservative by design: over-rejecting a borderline real headline is the
+# correct way to err for a safety screen.
+# ---------------------------------------------------------------------------
+ACCUSATION_VERBS = {
+    "rape", "raped", "rapes", "raping",
+    "molest", "molested", "molests", "molesting",
+    "murder", "murders", "murdered",
+    "assault", "assaults", "assaulted",
+    "abuse", "abuses", "abused",
+}
+
+# Common capitalized sentence-openers that are NOT personal names; a single
+# one of these leading the subject should not, by itself, trip person-detection.
+_NON_NAME_CAPS = {
+    "the", "a", "an", "this", "that", "these", "those", "new", "former",
+    "us", "uk", "eu", "un", "world", "police", "scientists", "researchers",
+    "officials", "voters", "leaders", "humans", "court", "courts",
+}
+
+def looks_like_person(subject):
+    """
+    Heuristic person-detector. Returns True when the subject plausibly names a
+    specific individual who could be defamed:
+      - two+ consecutive capitalized words (first + last name), OR
+      - a single capitalized token that is not a common non-name opener.
+    Deliberately broad: a safety screen should over-trigger, not under-trigger.
+    """
+    words = subject.split()
+    if not words:
+        return False
+    for i in range(len(words) - 1):
+        if words[i][:1].isupper() and words[i + 1][:1].isupper():
+            return True
+    if len(words) >= 1 and words[0][:1].isupper():
+        if normalize(words[0]) not in _NON_NAME_CAPS:
+            return True
+    return False
+
+def is_defamatory(headline, subject):
+    """
+    Reject if a serious-accusation verb appears in the PREDICATE portion and
+    the subject looks like a named person. The accusation verb pinned to a real
+    name is exactly the defamation risk we screen out.
+    """
+    if not looks_like_person(subject):
+        return False
+    pred_words = {normalize(w) for w in headline.split()[len(subject.split()):]}
+    return bool(pred_words & {normalize(v) for v in ACCUSATION_VERBS})
+
+
 def remix(parsed, n=None, seed=None, pp_swap=True, pp_swap_rate=0.5):
     """
     Assembly stage with the full chain:
@@ -307,6 +362,8 @@ def remix(parsed, n=None, seed=None, pp_swap=True, pp_swap_rate=0.5):
                     )
                     headline = f"{stem} {swap_in}"
 
+        if is_defamatory(headline, subj):
+            continue   # safety screen: no accusation pinned to a named person
         out.append(headline)
     return out
 
